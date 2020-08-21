@@ -8,6 +8,7 @@ __pycache__/
 *.py[cod]
 
 .idea
+.env
 *.env
 .DS_Store
 .AppleDouble

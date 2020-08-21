@@ -15,16 +15,22 @@ API_URL = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
 
 def parse_homework_status(homework):
     homework_name = homework['homework_name']
-    if homework['status'] != 'approved':
+    if homework['status'] == 'rejected':
         verdict = 'К сожалению в работе нашлись ошибки.'
-    else:
+    elif homework['status'] == 'approved':
         verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
+    else:
+        verdict = 'Но у работы неизвестный статус.'
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
 def get_homework_statuses(current_timestamp):
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    params = {'from_date': current_timestamp}
+    if current_timestamp:
+        params = {'from_date': current_timestamp}
+    else:
+        current_timestamp = int(time.time())
+        params = {'from_date': current_timestamp}
     homework_statuses = requests.get(API_URL, headers=headers, params=params)
     return homework_statuses.json()
 
