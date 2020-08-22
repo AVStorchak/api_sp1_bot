@@ -14,8 +14,10 @@ API_URL = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
 
 
 def parse_homework_status(homework):
-    homework_name = homework['homework_name']
-    if homework['status'] == 'rejected':
+    homework_name = homework.get('homework_name')
+    if homework_name is None:
+        return 'Не удалось получить данные по работе!'
+    elif homework['status'] == 'rejected':
         verdict = 'К сожалению в работе нашлись ошибки.'
     elif homework['status'] == 'approved':
         verdict = 'Ревьюеру всё понравилось, можно приступать к следующему уроку.'
@@ -26,12 +28,24 @@ def parse_homework_status(homework):
 
 def get_homework_statuses(current_timestamp):
     headers = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
-    if current_timestamp:
-        params = {'from_date': current_timestamp}
-    else:
+    if current_timestamp is None:
         current_timestamp = int(time.time())
-        params = {'from_date': current_timestamp}
-    homework_statuses = requests.get(API_URL, headers=headers, params=params)
+    params = {'from_date': current_timestamp}
+
+    try:
+        homework_statuses = requests.get(API_URL, headers=headers,
+                                         params=params)
+    except requests.exceptions.ConnectionError as e:
+        print('Connection error!')
+        raise SystemExit(e)
+    except requests.exceptions.Timeout:
+        print('Connection timeout!')
+    except requests.exceptions.TooManyRedirects as e:
+        print('Too many redirects!')
+        raise SystemExit(e)
+    except requests.exceptions.RequestException as e:
+        raise SystemExit(e)
+
     return homework_statuses.json()
 
 
